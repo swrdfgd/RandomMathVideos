@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random Math Videos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+  <script src="daftarKata.js"></script>
+  <script src="daftarKategori.js"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    header {
+      background-color: #007BFF;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .video-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+    }
+
+    .btn {
+      background-color: #28a745;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .btn:hover {
+      background-color: #218838;
+    }
+
+    .center {
+      text-align: center;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Random Math Videos</h1>
+  </header>
+
+  <div class="container">
+    <div id="videoContainer" class="video-grid"></div>
+    <div class="center">
+      <button id="loadMore" class="btn">🎲</button>
+    </div>
+  </div>
+
+  <script>
+    const videoContainer = document.getElementById("videoContainer");
+    let daftarApi = [
+      'AIzaSyCqKzTy1eRi9ydH7a1E-jgbBfZVNcpOLGQ',
+    ];
+    /**
+ * Fallback video IDs (sementara dimatikan)
+ * Dapat diisi manual jika ingin menyimpan daftar video tertentu
+ * Contoh:
+ * const fallbackVideoIds = [
+ *   'dQw4w9WgXcQ', 'eY52Zsg-KVI', 'sNPnbI1arSE'
+ * ];
+ */
+// const fallbackVideoIds = [
+//   'dQw4w9WgXcQ', 'eY52Zsg-KVI', 'sNPnbI1arSE'
+// ];
+    /**
+ * Daftar channel YouTube matematika populer
+ * Digunakan untuk mengambil video dari playlist upload mereka
+ */
+const daftarChannel = [
+      'YO_jab_esuFRV4b17AJtAw', // 3Blue1Brown
+      '1_uAIS3r8Vu6JjXWvastJg', // Mathologer
+      'q0EGvLTyy-LLT1oUSO_0FQ'  // Eddie Woo
+    ];
+
+    async function tambahKataDariWikipedia(jumlahKategori = 3, jumlahArtikel = 10) {
+      const kategoriTerpilih = [];
+      while (kategoriTerpilih.length < jumlahKategori) {
+        const acak = daftarKategori[Math.floor(Math.random() * daftarKategori.length)][0];
+        if (!kategoriTerpilih.includes(acak)) kategoriTerpilih.push(acak);
+      }
+
+      for (const kategori of kategoriTerpilih) {
+        try {
+          const url = `https://en.wikipedia.org/w/api.php?action=query&list=categorymembers&cmtitle=Category:${encodeURIComponent(kategori)}&cmlimit=${jumlahArtikel}&format=json&origin=*`;
+          const res = await fetch(url);
+          const data = await res.json();
+          const judulArtikel = data.query.categorymembers.map(item => item.title);
+
+          judulArtikel.forEach(judul => {daftarKata.push(judul);
+          });
+        } catch (e) {
+          console.error('Gagal mengambil dari kategori:', kategori, e);
+        }
+      }
+    }
+
+    function renderVideos(videoIds) {
+      videoContainer.innerHTML = "";
+      videoIds.forEach(vid => {
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.innerHTML = `
+          <iframe src="https://www.youtube.com/embed/${vid}" allowfullscreen></iframe>
+          <div id="title-${vid}" style="margin-top: 0.5rem; font-weight: bold;">Loading title...</div>
+          <a href="https://www.youtube.com/watch?v=${vid}" target="_blank"><button class="btn">Watch on YouTube</button></a>
+        `;
+        videoContainer.appendChild(card);
+
+        fetch(`https://www.googleapis.com/youtube/v3/videos?id=${vid}&key=${daftarApi[Math.floor(Math.random() * daftarApi.length)]}&part=snippet`)
+          .then(res => res.json())
+          .then(data => {
+            const title = data.items[0]?.snippet?.title || "No Title Available";
+            document.getElementById(`title-${vid}`).innerText = title;
+          });
+      });
+    }
+
+    /**
+ * Menyimpan page token per channel agar bisa mengambil video dari halaman berikutnya
+ */
+const channelPageTokens = {};
+
+/**
+ * Mengambil satu video secara acak dari:
+ * - playlist channel populer (50%)
+ * - pencarian kata kunci (50%)
+ * (fallback sementara dimatikan)
+ */
+async function ambilRandomVideoId(apiKey) {
+  const random = Math.random();
+
+  // 1. Ambil video dari playlist upload channel populer
+  if (random < 1/2) {
+    const idChannel = daftarChannel[Math.floor(Math.random() * daftarChannel.length)];
+    const storedToken = channelPageTokens[idChannel];
+    let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UU${idChannel}&key=${apiKey}&maxResults=${Math.ceil(Math.random()*50)}`;
+    // * gunakan token sebelumnya jika tersedia dan dipilih secara acak
+    if (storedToken && Math.random() < 1/2) {
+      url += `&pageToken=${storedToken}`;
+    }
+        const res = await fetch(url);
+        const data = await res.json();
+        // * simpan nextPageToken jika tersedia
+        if (data.nextPageToken) channelPageTokens[idChannel] = data.nextPageToken;
+        const items = data.items;
+        if (items && items.length > 0) {
+          const vids = items.filter(it => it.snippet?.resourceId?.videoId);
+          const pilih = vids[Math.floor(Math.random() * vids.length)];
+          return pilih?.snippet?.resourceId?.videoId;
+        }
+      }
+
+      /**
+ * Ambil video dari daftar fallback
+ * Akan digunakan jika disediakan ID video manual dan kondisi acak cocok
+ */
+      /**
+ * Ambil video dari daftar fallback (sementara dikomentari karena daftar kosong)
+ * Akan digunakan jika disediakan ID video manual dan kondisi acak cocok
+ */
+// if (random < 2/3 && fallbackVideoIds.length > 0) {
+//   return fallbackVideoIds[Math.floor(Math.random() * fallbackVideoIds.length)];
+// }
+
+      // 3. Ambil video dari hasil pencarian kata kunci random
+      let keyword = '';
+      while (Math.random() < 1/2 || keyword.length < 3) {
+        let pilihanKeyword = daftarKata[Math.floor(Math.random() * daftarKata.length)];
+        let bagian = pilihanKeyword.split(/[-–—\/,:.;()\[\]\s]+/);
+        for (let i = 0; i < bagian.length; i++) {
+          if (Math.random() < 1/2) keyword += bagian[i] + ' ';
+        }
+      }
+      keyword = keyword.trim();
+
+      const encodedKeyword = encodeURIComponent(keyword);
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodedKeyword}&type=video&key=${apiKey}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const items = data.items;
+      if (items && items.length > 0) {
+        return items[Math.floor(Math.random() * items.length)].id.videoId;
+      }
+      return null;
+    }
+
+    async function cariVideo() {
+      await tambahKataDariWikipedia();
+      const apiKey = daftarApi[Math.floor(Math.random() * daftarApi.length)];
+      const videoIds = [];
+      for (let i = 0; i < 6; i++) {
+        const vid = await ambilRandomVideoId(apiKey);
+        if (vid) videoIds.push(vid);
+      }
+      renderVideos(videoIds);
+    }
+
+    document.getElementById("loadMore").addEventListener("click", () => {
+      cariVideo();
+    });
+
+    cariVideo(); // initial random load
+  </script>
+</body>
+</html>
