@@ -8,6 +8,27 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
   <script src="daftarKata.js"></script>
   <script src="daftarKategori.js"></script>
+  <script>
+  
+  daftarChannel = [
+      'UUYO_jab_esuFRV4b17AJtAw', // 3Blue1Brown
+      'UU1_uAIS3r8Vu6JjXWvastJg', // Mathologer
+      'UUq0EGvLTyy-LLT1oUSO_0FQ',  // Eddie Woo
+	  'UUEWpbFLzoYGPfuWUMFPSaoA', //The Organic Chemistry Tutor
+  ];
+  banyakDaftarIdChannel = 1;
+  pilihanDaftarIdChannel = 1;
+  while (Math.random() < 1/2 && pilihanDaftarIdChannel < banyakDaftarIdChannel){pilihanDaftarIdChannel++}
+  document.write('<scr' + 'ipt src="playlistList/playlistList'+(1+Math.floor(Math.random()*pilihanDaftarIdChannel))+'.js"></scr' + 'ipt>');
+  while (Math.random() < 1/2 && pilihanDaftarIdChannel < banyakDaftarIdChannel){
+	pilihanDaftarIdChannel++;
+	if (Math.random() < 1/2){
+		document.write('<scr' + 'ipt src="playlistList/playlistList'+(1+Math.floor(Math.random()*pilihanDaftarIdChannel))+'.js"></scr' + 'ipt>');
+	}
+	
+  }
+  </script>
+  </script>
   <style>
     body {
       font-family: 'Roboto', sans-serif;
@@ -102,12 +123,6 @@
  * Daftar channel YouTube matematika populer
  * Digunakan untuk mengambil video dari playlist upload mereka
  */
-const daftarChannel = [
-      'YO_jab_esuFRV4b17AJtAw', // 3Blue1Brown
-      '1_uAIS3r8Vu6JjXWvastJg', // Mathologer
-      'q0EGvLTyy-LLT1oUSO_0FQ',  // Eddie Woo
-	  'EWpbFLzoYGPfuWUMFPSaoA', //The Organic Chemistry Tutor
-    ];
 
     async function tambahKataDariWikipedia(jumlahKategori = 3, jumlahArtikel = 10) {
       const kategoriTerpilih = [];
@@ -170,7 +185,7 @@ async function ambilRandomVideoId(apiKey) {
   if (random < 1/2) {
     const idChannel = daftarChannel[Math.floor(Math.random() * daftarChannel.length)];
     const storedToken = channelPageTokens[idChannel];
-    let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UU${idChannel}&key=${apiKey}&maxResults=${Math.ceil(Math.random()*50)}`;
+    let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${idChannel}&key=${apiKey}&maxResults=${Math.ceil(Math.random()*50)}`;
     // * gunakan token sebelumnya jika tersedia dan dipilih secara acak
     if (storedToken && Math.random() < 1/2) {
       url += `&pageToken=${storedToken}`;
