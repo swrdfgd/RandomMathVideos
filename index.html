@@ -16,17 +16,18 @@
       'UUq0EGvLTyy-LLT1oUSO_0FQ',  // Eddie Woo
 	  'UUEWpbFLzoYGPfuWUMFPSaoA', //The Organic Chemistry Tutor
   ];
-  banyakDaftarIdChannel = 1;
-  pilihanDaftarIdChannel = 1;
-  while (Math.random() < 1/2 && pilihanDaftarIdChannel < banyakDaftarIdChannel){pilihanDaftarIdChannel++}
-  document.write('<scr' + 'ipt src="playlistList/playlistList'+(1+Math.floor(Math.random()*pilihanDaftarIdChannel))+'.js"></scr' + 'ipt>');
-  while (Math.random() < 1/2 && pilihanDaftarIdChannel < banyakDaftarIdChannel){
-	pilihanDaftarIdChannel++;
-	if (Math.random() < 1/2){
-		document.write('<scr' + 'ipt src="playlistList/playlistList'+(1+Math.floor(Math.random()*pilihanDaftarIdChannel))+'.js"></scr' + 'ipt>');
-	}
-	
+  
+  banyakDaftarIdChannel = 2;
+  daftarTerambil = [];
+  while (Math.random() < 1/2 && daftarTerambil.length < banyakDaftarIdChannel){
+	pilihanDaftarIdChannel = 1+Math.floor(Math.random()*banyakDaftarIdChannel);
+	if (!daftarTerambil.includes(pilihanDaftarIdChannel)){
+		document.write('<scr' + 'ipt src="playlistList/playlistList'+(1+Math.floor(Math.random()*banyakDaftarIdChannel))+'.js"></scr' + 'ipt>');
+		daftarTerambil.push(pilihanDaftarIdChannel)
+		}
   }
+  
+
   </script>
   </script>
   <style>
