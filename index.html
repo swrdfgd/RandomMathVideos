@@ -15,6 +15,7 @@
       'UU1_uAIS3r8Vu6JjXWvastJg', // Mathologer
       'UUq0EGvLTyy-LLT1oUSO_0FQ',  // Eddie Woo
 	  'UUEWpbFLzoYGPfuWUMFPSaoA', //The Organic Chemistry Tutor
+	  'Hnj59g7jezwTy5GeL8EA_g', //MindYourDecisions
   ];
   
   banyakDaftarIdChannel = 2;
@@ -89,6 +90,19 @@
       text-align: center;
       margin-top: 2rem;
     }
+	#loading {
+	  display: none;
+	  position: fixed;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+	  font-size: 1.5rem;
+	  background: rgba(255,255,255,0.9);
+	  padding: 1rem 2rem;
+	  border-radius: 10px;
+	  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+	  z-index: 9999;
+	}
   </style>
 </head>
 <body>
@@ -97,10 +111,11 @@
   </header>
 
   <div class="container">
-    <div id="videoContainer" class="video-grid"></div>
     <div class="center">
       <button id="loadMore" class="btn">🎲</button>
     </div>
+	<div id="loading">⏳ Loading videos...</div>
+	<div id="videoContainer" class="video-grid"></div>
   </div>
 
   <script>
@@ -238,6 +253,10 @@ async function ambilRandomVideoId(apiKey) {
     }
 
     async function cariVideo() {
+	  const loadingEl = document.getElementById("loading");
+	  videoContainer.innerHTML = "";
+	  loadingEl.style.display = "block";
+	  
       await tambahKataDariWikipedia();
       const apiKey = daftarApi[Math.floor(Math.random() * daftarApi.length)];
       const videoIds = [];
@@ -245,7 +264,9 @@ async function ambilRandomVideoId(apiKey) {
         const vid = await ambilRandomVideoId(apiKey);
         if (vid) videoIds.push(vid);
       }
+	  loadingEl.style.display = "none";
       renderVideos(videoIds);
+	  
     }
 
     document.getElementById("loadMore").addEventListener("click", () => {
