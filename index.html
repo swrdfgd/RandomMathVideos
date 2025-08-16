@@ -161,6 +161,14 @@
         }
       }
     }
+	
+	async function ambilRandomEoM(jumlah = 10) {
+      const url = `https://encyclopediaofmath.org/api.php?action=query&list=random&rnlimit=${encodeURIComponent(jumlah)}&rnnamespace=0&format=json&origin=*`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      (data.query?.random || []).forEach(judul => {daftarKata.push(judul.title);})
+    }
 
     function renderVideos(videoIds) {
       videoContainer.innerHTML = "";
@@ -258,6 +266,7 @@ async function ambilRandomVideoId(apiKey) {
 	  loadingEl.style.display = "block";
 	  
       await tambahKataDariWikipedia();
+	  await ambilRandomEoM();
       const apiKey = daftarApi[Math.floor(Math.random() * daftarApi.length)];
       const videoIds = [];
       for (let i = 0; i < 6; i++) {
