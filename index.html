@@ -131,6 +131,8 @@
   </div>
 
   <script>
+	daftarKataWiki = [];
+	daftarKataEOM = [];
     const videoContainer = document.getElementById("videoContainer");
     let daftarApi = [
 		'AIzaSyBwwv3LrgSG3NcETgahW-3-_DyP74GwViA','AIzaSyB7TX3CfUSUBnWnNP9CGBjLzmfIeo6SpfM',
@@ -166,7 +168,7 @@
           const data = await res.json();
           const judulArtikel = data.query.categorymembers.map(item => item.title);
 
-          judulArtikel.forEach(judul => {daftarKata.push(judul);
+          judulArtikel.forEach(judul => {daftarKata.push(judul); daftarKataWiki.push(judul);
           });
         } catch (e) {
           console.error('Gagal mengambil dari kategori:', kategori, e);
@@ -175,11 +177,15 @@
     }
 	
 	async function ambilRandomEoM(jumlah = 10) {
+	  try {
       const url = `https://encyclopediaofmath.org/api.php?action=query&list=random&rnlimit=${encodeURIComponent(jumlah)}&rnnamespace=0&format=json&origin=*`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      (data.query?.random || []).forEach(judul => {daftarKata.push(judul.title);})
+      (data.query?.random || []).forEach(judul => {daftarKata.push(judul.title); daftarKataEOM.push(judul.title)})
+	  } catch (e) {
+         console.error('Gagal mengambil dari encyclopediaofmath', e);
+	  }
     }
 
     function renderVideos(videoIds) {
@@ -254,6 +260,11 @@ async function ambilRandomVideoId(apiKey) {
       let keyword = '';
       while (Math.random() < 1/2 || keyword.length < 3) {
         let pilihanKeyword = daftarKata[Math.floor(Math.random() * daftarKata.length)];
+		if (Math.random() < 0.5 && daftarKataWiki.length > 0){
+			pilihanKeyword = daftarKataWiki[Math.floor(Math.random() * daftarKataWiki.length)];
+		} else if (Math.random() < 0.5 && daftarKataEOM.length > 0){
+			pilihanKeyword = daftarKataEOM[Math.floor(Math.random() * daftarKataEOM.length)];
+		}
         let bagian = pilihanKeyword.split(/[-–—\/,:.;()\[\]\s]+/);
         for (let i = 0; i < bagian.length; i++) {
           if (Math.random() < 1/2) keyword += bagian[i] + ' ';
