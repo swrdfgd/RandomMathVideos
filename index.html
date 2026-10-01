@@ -228,68 +228,82 @@ const channelPageTokens = {};
  * - pencarian kata kunci (50%)
  * (fallback sementara dimatikan)
  */
+// Tentukan berapa banyak file daftaridX.txt yang ada di folder idtersimpan
+const jumlahFileDaftarId = 1; // Ubah angka ini sesuai dengan jumlah file Anda
+
 async function ambilRandomVideoId(apiKey) {
   const random = Math.random();
 
-  // 1. Ambil video dari playlist upload channel populer
-  if (random < 1/2) {
+  // 1. Mode Baru: Ambil dari file idtersimpan/daftaridX.txt (Probabilitas ~33%)
+  if (random < 1/3) {
+    const randomFileIndex = Math.floor(Math.random() * jumlahFileDaftarId) + 1;
+    try {
+      const res = await fetch(`idtersimpan/daftarid${randomFileIndex}.txt`);
+      if (res.ok) {
+        const text = await res.text();
+        // Memecah teks berdasarkan baris baru dan membuang baris kosong
+        const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+        if (lines.length > 0) {
+          return lines[Math.floor(Math.random() * lines.length)];
+        }
+      }
+    } catch (e) {
+      console.error(`Gagal mengambil dari idtersimpan/daftarid${randomFileIndex}.txt`, e);
+    }
+  }
+  
+  // 2. Ambil video dari playlist upload channel populer (Probabilitas ~33%)
+  else if (random < 2/3) {
     const idChannel = daftarChannel[Math.floor(Math.random() * daftarChannel.length)];
     const storedToken = channelPageTokens[idChannel];
     let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${idChannel}&key=${apiKey}&maxResults=${Math.ceil(Math.random()*50)}`;
-    // * gunakan token sebelumnya jika tersedia dan dipilih secara acak
+    
+    // gunakan token sebelumnya jika tersedia dan dipilih secara acak
     if (storedToken && Math.random() < 1/2) {
       url += `&pageToken=${storedToken}`;
     }
-        const res = await fetch(url);
-        const data = await res.json();
-        // * simpan nextPageToken jika tersedia
-        if (data.nextPageToken) channelPageTokens[idChannel] = data.nextPageToken;
-        const items = data.items;
-        if (items && items.length > 0) {
-          const vids = items.filter(it => it.snippet?.resourceId?.videoId);
-          const pilih = vids[Math.floor(Math.random() * vids.length)];
-          return pilih?.snippet?.resourceId?.videoId;
-        }
-      }
-
-      /**
- * Ambil video dari daftar fallback
- * Akan digunakan jika disediakan ID video manual dan kondisi acak cocok
- */
-      /**
- * Ambil video dari daftar fallback (sementara dikomentari karena daftar kosong)
- * Akan digunakan jika disediakan ID video manual dan kondisi acak cocok
- */
-// if (random < 2/3 && fallbackVideoIds.length > 0) {
-//   return fallbackVideoIds[Math.floor(Math.random() * fallbackVideoIds.length)];
-// }
-
-      // 3. Ambil video dari hasil pencarian kata kunci random
-      let keyword = '';
-      while (Math.random() < 1/2 || keyword.length < 3) {
-        let pilihanKeyword = daftarKata[Math.floor(Math.random() * daftarKata.length)];
-		if (Math.random() < 0.5 && daftarKataWiki.length > 0){
-			pilihanKeyword = daftarKataWiki[Math.floor(Math.random() * daftarKataWiki.length)];
-		} else if (Math.random() < 0.5 && daftarKataEOM.length > 0){
-			pilihanKeyword = daftarKataEOM[Math.floor(Math.random() * daftarKataEOM.length)];
-		}
-        let bagian = pilihanKeyword.split(/[-–—\/,:.;()\[\]\s]+/);
-        for (let i = 0; i < bagian.length; i++) {
-          if (Math.random() < 1/2) keyword += bagian[i] + ' ';
-        }
-      }
-      keyword = keyword.trim();
-
-      const encodedKeyword = encodeURIComponent(keyword);
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodedKeyword}&type=video&key=${apiKey}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const items = data.items;
-      if (items && items.length > 0) {
-        return items[Math.floor(Math.random() * items.length)].id.videoId;
-      }
-      return null;
+    
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    // simpan nextPageToken jika tersedia
+    if (data.nextPageToken) channelPageTokens[idChannel] = data.nextPageToken;
+    const items = data.items;
+    
+    if (items && items.length > 0) {
+      const vids = items.filter(it => it.snippet?.resourceId?.videoId);
+      const pilih = vids[Math.floor(Math.random() * vids.length)];
+      return pilih?.snippet?.resourceId?.videoId;
     }
+  }
+
+  // 3. Ambil video dari hasil pencarian kata kunci random (Probabilitas ~33%)
+  let keyword = '';
+  while (Math.random() < 1/2 || keyword.length < 3) {
+    let pilihanKeyword = daftarKata[Math.floor(Math.random() * daftarKata.length)];
+    if (Math.random() < 0.5 && daftarKataWiki.length > 0){
+      pilihanKeyword = daftarKataWiki[Math.floor(Math.random() * daftarKataWiki.length)];
+    } else if (Math.random() < 0.5 && daftarKataEOM.length > 0){
+      pilihanKeyword = daftarKataEOM[Math.floor(Math.random() * daftarKataEOM.length)];
+    }
+    let bagian = pilihanKeyword.split(/[-–—\/,:.;()\[\]\s]+/);
+    for (let i = 0; i < bagian.length; i++) {
+      if (Math.random() < 1/2) keyword += bagian[i] + ' ';
+    }
+  }
+  keyword = keyword.trim();
+
+  const encodedKeyword = encodeURIComponent(keyword);
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodedKeyword}&type=video&key=${apiKey}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const items = data.items;
+  if (items && items.length > 0) {
+    return items[Math.floor(Math.random() * items.length)].id.videoId;
+  }
+  
+  return null;
+}
 
     async function cariVideo() {
 	  const loadingEl = document.getElementById("loading");
